@@ -1,0 +1,28 @@
+{
+  "id": "conversation-gamma",
+  "title": "Gamma 队列恢复",
+  "create_time": 1710002000,
+  "update_time": 1710002300,
+  "mapping": {
+    "root": {
+      "id": "root",
+      "message": null,
+      "parent": null,
+      "children": ["user-gamma"]
+    },
+    "user-gamma": {
+      "id": "user-gamma",
+      "parent": "root",
+      "children": [],
+      "message": {
+        "id": "message-user-gamma",
+        "author": { "role": "user" },
+        "create_time": 1710002010,
+        "content": {
+          "content_type": "text",
+          "parts": ["Gamma 用于模拟 MV3 休眠后的恢复。"]
+        }
+      }
+    }
+  }
+}

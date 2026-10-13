@@ -1,0 +1,29 @@
+{
+  "name": "chatgpt-deep-search-edge",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Microsoft Edge MV3 extension for local exact search across recent ChatGPT conversations.",
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "node scripts/build.mjs",
+    "build:watch": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run typecheck && npm run test && npm run build",
+    "package": "powershell -ExecutionPolicy Bypass -File scripts/package-extension.ps1"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "@types/chrome": "latest",
+    "@types/node": "latest",
+    "esbuild": "latest",
+    "eslint": "latest",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  }
+}

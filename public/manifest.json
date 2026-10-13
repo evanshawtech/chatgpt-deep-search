@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "ChatGPT 深度搜索",
+  "version": "0.0.0",
+  "description": "Local exact search for recent ChatGPT conversations.",
+  "permissions": ["storage", "alarms"],
+  "host_permissions": ["https://chatgpt.com/*"],
+  "background": {
+    "service_worker": "background/index.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["content/index.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "options/index.html",
+  "action": {
+    "default_title": "ChatGPT 深度搜索"
+  }
+}

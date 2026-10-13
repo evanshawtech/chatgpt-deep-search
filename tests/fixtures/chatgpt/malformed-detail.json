@@ -1,0 +1,16 @@
+{
+  "id": "malformed-conversation",
+  "title": "Malformed",
+  "mapping": {
+    "broken": {
+      "id": "broken",
+      "message": {
+        "id": "broken-message",
+        "author": { "role": "assistant" },
+        "content": {
+          "parts": []
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+artifacts/
+playwright-report/
+test-results/
+coverage/
+*.zip
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

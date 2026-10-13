@@ -1,0 +1,49 @@
+{
+  "id": "conversation-alpha",
+  "title": "Alpha 深度搜索",
+  "create_time": 1710000000,
+  "update_time": 1710000300,
+  "mapping": {
+    "root": {
+      "id": "root",
+      "message": null,
+      "parent": null,
+      "children": ["user-1"]
+    },
+    "user-1": {
+      "id": "user-1",
+      "parent": "root",
+      "children": ["assistant-1"],
+      "message": {
+        "id": "message-user-alpha",
+        "author": { "role": "user" },
+        "create_time": 1710000010,
+        "content": {
+          "content_type": "text",
+          "parts": [
+            "请完整保留这一段中文：精确连续子串不能丢失。",
+            "Also keep English, numbers 12345, and code identifiers."
+          ]
+        }
+      }
+    },
+    "assistant-1": {
+      "id": "assistant-1",
+      "parent": "user-1",
+      "children": [],
+      "message": {
+        "id": "message-assistant-alpha",
+        "author": { "role": "assistant" },
+        "create_time": 1710000020,
+        "content": {
+          "content_type": "text",
+          "parts": [
+            "助手回复第一行。",
+            "```ts\nconst phase = \"three\";\n```",
+            "最后一行不能截断。"
+          ]
+        }
+      }
+    }
+  }
+}

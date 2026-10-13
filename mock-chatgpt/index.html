@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mock ChatGPT Sidebar</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --sidebar-bg: #f9f9f9;
+      --sidebar-border: #e3e3e3;
+      --row-hover: #ececec;
+      --row-active: #ececec;
+      --text: #1f1f1f;
+      --muted: #6f6f6f;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --sidebar-bg: #171717;
+        --sidebar-border: #2f2f2f;
+        --row-hover: #2f2f2f;
+        --row-active: #262626;
+        --text: #f4f4f4;
+        --muted: #a3a3a3;
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background: Canvas;
+    }
+
+    .mock-sidebar {
+      width: 260px;
+      min-height: 100vh;
+      box-sizing: border-box;
+      padding: 12px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+      transition: width 120ms ease;
+    }
+
+    .mock-sidebar[data-collapsed="true"] {
+      width: 68px;
+    }
+
+    .mock-offscreen-copy {
+      position: fixed;
+      left: -10000px;
+      top: 0;
+      width: 260px;
+      min-height: 100vh;
+      pointer-events: none;
+    }
+
+    .mock-sidebar[data-collapsed="true"] .mock-label,
+    .mock-sidebar[data-collapsed="true"] .mock-plan,
+    .mock-sidebar[data-collapsed="true"] .mock-section,
+    .mock-sidebar[data-collapsed="true"] .mock-chat-list {
+      display: none;
+    }
+
+    .mock-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 40px;
+      padding: 0 10px;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .mock-plan {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .mock-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 8px;
+    }
+
+    .mock-primary-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .mock-nav[data-direct-row-tag="div"] > :not(div) {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .mock-nav[data-require-native-inner="true"] > .mock-row:not(:has(.mock-inner)) {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .mock-row {
+      width: 100%;
+      height: 40px;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      border-radius: 9px;
+      padding: 0 10px;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      text-align: left;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .mock-row:hover {
+      background: var(--row-hover);
+    }
+
+    .mock-row[aria-current="page"] {
+      background: var(--row-active);
+    }
+
+    .mock-row-wrapper {
+      height: 40px;
+      overflow: hidden;
+    }
+
+    .mock-row-wrapper > .mock-row {
+      height: 40px;
+    }
+
+    .mock-icon {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      border: 1.8px solid currentColor;
+      border-radius: 999px;
+      box-sizing: border-box;
+    }
+
+    .mock-icon.square {
+      border-radius: 4px;
+    }
+
+    .mock-native-search-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 20px;
+    }
+
+    .mock-native-search-icon .icon {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+
+    .mock-spacer {
+      flex: 1;
+    }
+
+    .mock-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #4aa884;
+    }
+
+    .mock-section {
+      margin: 22px 10px 8px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .mock-chat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 4px;
+    }
+
+    .mock-chat {
+      display: block;
+      overflow: hidden;
+      padding: 8px 10px;
+      border-radius: 8px;
+      color: var(--text);
+      text-decoration: none;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mock-chat:hover {
+      background: var(--row-hover);
+    }
+
+    main {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      color: var(--muted);
+      font-size: 24px;
+    }
+
+    .mock-conversation {
+      width: min(760px, calc(100vw - 340px));
+      display: grid;
+      gap: 16px;
+      align-self: start;
+      margin-top: 80px;
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .mock-message {
+      border: 1px solid var(--sidebar-border);
+      border-radius: 12px;
+      padding: 16px;
+      background: Canvas;
+      white-space: pre-wrap;
+    }
+
+    .mock-message[data-chatgpt-deep-search-target="true"] {
+      outline: 3px solid #10a37f;
+      outline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="mock-chatgpt-root"></div>
+  <main id="mock-main">
+    <p>Mock ChatGPT content area</p>
+  </main>
+
+  <script>
+    (() => {
+      const root = document.getElementById('mock-chatgpt-root');
+      const main = document.getElementById('mock-main');
+      const params = new URLSearchParams(window.location.search);
+      const defaultVariant = params.get('variant') || 'link';
+      const defaultCollapsed = params.get('collapsed') === 'true';
+
+      function createIcon(kind) {
+        if (kind === 'search') {
+          const icon = document.createElement('div');
+          icon.className = 'mock-native-search-icon icon';
+          icon.setAttribute('aria-hidden', 'true');
+
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('width', '20');
+          svg.setAttribute('height', '20');
+          svg.setAttribute('aria-hidden', 'true');
+          svg.classList.add('icon');
+
+          const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+          use.setAttribute('href', '/cdn/assets/sprites-core-c74d0474.svg#ac6d36');
+          use.setAttribute('fill', 'currentColor');
+          svg.append(use);
+          icon.append(svg);
+          return icon;
+        }
+
+        const icon = document.createElement('span');
+        icon.className = `mock-icon ${kind === 'square' ? 'square' : ''}`;
+        icon.setAttribute('aria-hidden', 'true');
+        return icon;
+      }
+
+      function iconKindForLabel(label) {
+        if (label === '搜索聊天') return 'search';
+        return label === '文件库' || label === '项目' ? 'square' : 'circle';
+      }
+
+      function appendLabel(row, label, variant) {
+        if (variant === 'split-div' && label === '搜索聊天') {
+          const first = document.createElement('span');
+          first.className = 'mock-label';
+          first.textContent = '搜索';
+
+          const second = document.createElement('span');
+          second.className = 'mock-label';
+          second.textContent = '聊天';
+
+          row.append(first, second);
+          return;
+        }
+
+        const text = document.createElement('span');
+        text.className = 'mock-label';
+        text.textContent = label;
+        row.append(text);
+      }
+
+      function createRow({ label, href, testId, current, variant = defaultVariant, status }) {
+        if (variant === 'clone-required') {
+          const row = document.createElement('div');
+          row.className = 'mock-row';
+          row.dataset.mockRow = label;
+          if (testId) row.dataset.testid = testId;
+          if (current) row.setAttribute('aria-current', 'page');
+          row.setAttribute('role', 'button');
+          row.tabIndex = 0;
+
+          const inner = document.createElement('span');
+          inner.className = 'mock-inner';
+          inner.append(createIcon(iconKindForLabel(label)));
+          appendLabel(inner, label, variant);
+          row.append(inner);
+          return row;
+        }
+
+        if (variant === 'strict-div') {
+          const row = document.createElement('div');
+          row.className = 'mock-row';
+          row.dataset.mockRow = label;
+          if (testId) row.dataset.testid = testId;
+          if (current) row.setAttribute('aria-current', 'page');
+          row.setAttribute('role', 'button');
+          row.tabIndex = 0;
+          row.append(createIcon(iconKindForLabel(label)));
+          appendLabel(row, label, variant);
+          return row;
+        }
+
+        if (variant === 'wrapped-button') {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'mock-row-wrapper';
+          wrapper.dataset.mockRow = label;
+          if (current) wrapper.setAttribute('aria-current', 'page');
+          wrapper.append(createRow({ label, href, testId, current, variant: 'button', status }));
+          return wrapper;
+        }
+
+        const row = variant === 'button'
+          ? document.createElement('button')
+          : variant === 'split-div'
+            ? document.createElement('div')
+            : document.createElement('a');
+        row.className = 'mock-row';
+        row.dataset.mockRow = label;
+        if (testId && variant !== 'split-div') row.dataset.testid = testId;
+        if (current) row.setAttribute('aria-current', 'page');
+        if (row instanceof HTMLButtonElement) {
+          row.type = 'button';
+          row.setAttribute('aria-label', label);
+        } else if (row instanceof HTMLAnchorElement) {
+          row.href = href || '#';
+        }
+
+        row.append(createIcon(iconKindForLabel(label)));
+        appendLabel(row, label, variant);
+
+        if (status) {
+          const spacer = document.createElement('span');
+          spacer.className = 'mock-spacer';
+          row.append(spacer);
+
+          const dot = document.createElement('span');
+          dot.className = 'mock-status-dot';
+          dot.setAttribute('aria-hidden', 'true');
+          row.append(dot);
+        }
+
+        return row;
+      }
+
+      function renderSidebar(options = {}) {
+        const variant = options.variant || defaultVariant;
+        const collapsed = Boolean(options.collapsed ?? defaultCollapsed);
+        const includeSearch = options.includeSearch !== false;
+        root.replaceChildren();
+        if (options.includeOffscreenDuplicate) {
+          const duplicate = document.createElement('aside');
+          duplicate.className = 'mock-sidebar mock-offscreen-copy';
+          duplicate.dataset.testid = 'offscreen-sidebar';
+
+          const duplicateNav = document.createElement('nav');
+          duplicateNav.className = 'mock-nav';
+          duplicateNav.append(createRow({ label: '新聊天', href: '#offscreen-new', current: true, variant: 'link' }));
+          duplicateNav.append(createRow({ label: '搜索聊天', href: '#offscreen-search', testId: 'native-search-chat', variant: 'link' }));
+          duplicateNav.append(createRow({ label: '文件库', href: '#offscreen-library', variant: 'link' }));
+          duplicate.append(duplicateNav);
+          root.append(duplicate);
+        }
+
+        const aside = document.createElement('aside');
+        aside.className = 'mock-sidebar';
+        aside.dataset.testid = 'sidebar';
+        aside.dataset.collapsed = String(collapsed);
+        aside.setAttribute('aria-label', 'ChatGPT 侧栏');
+
+        const brand = document.createElement('div');
+        brand.className = 'mock-brand';
+        brand.innerHTML = '<span class="mock-label">ChatGPT <span class="mock-plan">Plus</span></span>';
+        aside.append(brand);
+
+        const nav = document.createElement('nav');
+        nav.className = 'mock-nav';
+        nav.setAttribute('aria-label', '主导航');
+        if (variant === 'strict-div') {
+          nav.dataset.directRowTag = 'div';
+        }
+        if (variant === 'clone-required') {
+          nav.dataset.requireNativeInner = 'true';
+        }
+        nav.append(createRow({ label: '新聊天', href: '#new', current: true, variant }));
+        if (includeSearch) {
+          nav.append(createRow({ label: '搜索聊天', href: '#search', testId: 'native-search-chat', variant }));
+        }
+        nav.append(createRow({ label: '文件库', href: '#library', variant }));
+        nav.append(createRow({ label: '项目', href: '#projects', variant }));
+        nav.append(createRow({ label: '已安排', href: '#scheduled', variant }));
+        nav.append(createRow({ label: '应用', href: '#apps', variant }));
+        if (options.groupPrimary) {
+          const primaryGroup = document.createElement('div');
+          primaryGroup.className = 'mock-primary-group';
+          primaryGroup.dataset.mockGroup = 'primary-nav';
+
+          const primaryRowCount = includeSearch ? 4 : 3;
+          while (nav.firstElementChild && primaryGroup.childElementCount < primaryRowCount) {
+            primaryGroup.append(nav.firstElementChild);
+          }
+
+          nav.prepend(primaryGroup);
+        }
+
+        aside.append(nav);
+
+        const pinned = document.createElement('div');
+        pinned.className = 'mock-section';
+        pinned.textContent = '已置顶';
+        aside.append(pinned);
+
+        const pinnedList = document.createElement('div');
+        pinnedList.className = 'mock-chat-list';
+        ['课程学习', '电路基础复习策略', '分支・正弦电流零状态响应'].forEach((title) => {
+          const link = document.createElement('a');
+          link.className = 'mock-chat';
+          link.href = `#chat-${encodeURIComponent(title)}`;
+          link.textContent = title;
+          pinnedList.append(link);
+        });
+        aside.append(pinnedList);
+
+        const recent = document.createElement('div');
+        recent.className = 'mock-section';
+        recent.textContent = '最近';
+        aside.append(recent);
+
+        const recentList = document.createElement('div');
+        recentList.className = 'mock-chat-list';
+        ['ChatGPT 搜索问题解析', '暑期选课推荐', 'Apple Music 推荐设置'].forEach((title) => {
+          const link = document.createElement('a');
+          link.className = 'mock-chat';
+          link.href = `#recent-${encodeURIComponent(title)}`;
+          link.textContent = title;
+          recentList.append(link);
+        });
+        aside.append(recentList);
+
+        root.append(aside);
+        return aside;
+      }
+
+      function clearSidebar() {
+        root.replaceChildren();
+      }
+
+      function rebuildSidebar(options = {}) {
+        clearSidebar();
+        return renderSidebar(options);
+      }
+
+      function setCollapsed(collapsed) {
+        const sidebar = root.querySelector('[data-testid="sidebar"]');
+        if (sidebar) sidebar.dataset.collapsed = String(collapsed);
+      }
+
+      function renderConversationContent() {
+        const match = /^\/c\/([^/]+)$/.exec(window.location.pathname);
+        main.replaceChildren();
+        if (!match) {
+          const placeholder = document.createElement('p');
+          placeholder.textContent = 'Mock ChatGPT content area';
+          main.append(placeholder);
+          return;
+        }
+
+        const conversationId = decodeURIComponent(match[1]);
+        const container = document.createElement('section');
+        container.className = 'mock-conversation';
+        container.dataset.conversationId = conversationId;
+
+        const heading = document.createElement('h1');
+        heading.textContent = conversationId;
+        container.append(heading);
+
+        [
+          ['message-hit', '命中消息：深度搜索应该滚动并高亮到这里。'],
+          ['message-long-code', '代码片段：\n```ts\nconst exactSearch = "精确连续子串不能丢失";\nconsole.log(exactSearch.repeat(8));\n```']
+        ].forEach(([id, text]) => {
+          const article = document.createElement('article');
+          article.className = 'mock-message';
+          article.dataset.messageId = id;
+          article.textContent = text;
+          container.append(article);
+        });
+
+        main.append(container);
+      }
+
+      function installHydrationGuard() {
+        const hydrateDelay = Number(params.get('hydrateDelay') || 600);
+        document.documentElement.dataset.mockHydrating = 'true';
+        document.documentElement.dataset.mockHydrationError = 'false';
+
+        const observer = new MutationObserver((mutations) => {
+          if (document.documentElement.dataset.mockHydrating !== 'true') return;
+
+          const extensionTouchedDom = mutations.some((mutation) => {
+            if (mutation.type === 'attributes') {
+              return mutation.attributeName?.startsWith('data-chatgpt-deep-search') === true;
+            }
+
+            return Array.from(mutation.addedNodes).some((node) => {
+              if (!(node instanceof HTMLElement)) return false;
+              return Boolean(
+                node.matches?.('[data-chatgpt-deep-search-row="true"], #chatgpt-deep-search-panel-host, #chatgpt-deep-search-sidebar-style') ||
+                node.querySelector?.('[data-chatgpt-deep-search-row="true"], #chatgpt-deep-search-panel-host, #chatgpt-deep-search-sidebar-style')
+              );
+            });
+          });
+
+          if (!extensionTouchedDom) return;
+
+          document.documentElement.dataset.mockHydrationError = 'true';
+          console.error('Mock React hydration error: extension mutated DOM before hydration completed');
+          document.querySelectorAll('[data-chatgpt-deep-search-row="true"], #chatgpt-deep-search-panel-host, #chatgpt-deep-search-sidebar-style').forEach((node) => {
+            node.remove();
+          });
+        });
+
+        observer.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['data-chatgpt-deep-search-boot', 'data-chatgpt-deep-search-diagnostics'],
+          childList: true,
+          subtree: true
+        });
+
+        window.setTimeout(() => {
+          document.documentElement.dataset.mockHydrating = 'false';
+          observer.disconnect();
+        }, hydrateDelay);
+      }
+
+      function installExtensionRowHider() {
+        const hideRows = () => {
+          root.querySelectorAll('.mock-row[data-chatgpt-deep-search-row="true"], .mock-row-wrapper[data-chatgpt-deep-search-row="true"]').forEach((row) => {
+            row.style.setProperty('display', 'none', 'important');
+            row.style.setProperty('width', '0', 'important');
+            row.style.setProperty('height', '0', 'important');
+            row.style.setProperty('overflow', 'hidden', 'important');
+          });
+        };
+
+        const observer = new MutationObserver(hideRows);
+        observer.observe(root, { childList: true, subtree: true });
+        hideRows();
+      }
+
+      window.__mockChatGPT = {
+        clearSidebar,
+        rebuildSidebar,
+        renderSidebar,
+        renderConversationContent,
+        setCollapsed
+      };
+
+      if (params.get('scenario') === 'hydrating-sidebar') {
+        renderSidebar();
+        installHydrationGuard();
+      } else if (params.get('scenario') === 'hidden-extension-row') {
+        renderSidebar({ groupPrimary: true });
+        installExtensionRowHider();
+      } else if (params.get('scenario') === 'offscreen-duplicate') {
+        renderSidebar({ includeOffscreenDuplicate: true });
+      } else if (params.get('scenario') === 'delayed-sidebar') {
+        clearSidebar();
+        window.setTimeout(() => renderSidebar(), Number(params.get('delay') || 250));
+      } else {
+        renderSidebar();
+      }
+
+      renderConversationContent();
+      window.addEventListener('popstate', renderConversationContent);
+    })();
+  </script>
+</body>
+</html>

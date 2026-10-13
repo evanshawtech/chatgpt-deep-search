@@ -1,0 +1,33 @@
+{
+  "conversation": {
+    "id": "conversation-beta",
+    "title": "Beta 固定测试",
+    "create_time": 1710001000,
+    "update_time": 1710001300,
+    "messages": [
+      {
+        "id": "message-user-beta",
+        "role": "user",
+        "create_time": 1710001010,
+        "content": "Beta 用户消息正文。"
+      },
+      {
+        "id": "message-assistant-beta",
+        "author": { "role": "assistant" },
+        "create_time": 1710001020,
+        "content": {
+          "parts": [
+            {
+              "content_type": "text",
+              "text": "Beta 助手嵌套 text 字段。"
+            },
+            {
+              "content_type": "text",
+              "text": "第二段也要保留。"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
